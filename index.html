@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>DimeX (DX)</title>
+<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
+
+<style>
+body{
+background:#000;
+color:#fff;
+font-family:Arial;
+margin:0;
+text-align:center;
+}
+
+header{
+padding:20px;
+font-size:28px;
+color:gold;
+border-bottom:1px solid #222;
+}
+
+.hero{
+padding:40px;
+}
+
+button{
+padding:14px 28px;
+background:gold;
+border:none;
+font-size:18px;
+border-radius:8px;
+margin:10px;
+}
+
+.card{
+background:#111;
+margin:20px;
+padding:20px;
+border-radius:12px;
+max-width:400px;
+margin:auto;
+}
+
+input{
+padding:12px;
+width:80%;
+margin:10px;
+}
+</style>
+</head>
+
+<body>
+
+<header>DimeX (DX) – BNB Smart Chain</header>
+
+<div class="hero">
+<h2>Secure Staking Dashboard</h2>
+<button onclick="connectWallet()">Connect Wallet</button>
+<div id="wallet" style="color:gold;margin-top:10px;"></div>
+</div>
+
+<div id="dash" style="display:none;">
+
+<div class="card">
+<h3>Stake DX</h3>
+<input id="amount" placeholder="Enter DX amount">
+<br>
+<button onclick="stake()">Stake</button>
+</div>
+
+<div class="card">
+<h3>Your Stake</h3>
+<p id="staked">0 DX</p>
+</div>
+
+<div class="card">
+<h3>Claim Rewards</h3>
+<button onclick="claim()">Claim</button>
+</div>
+
+</div>
+
+<script>
+let user;
+
+async function connectWallet(){
+if(window.ethereum){
+const provider=new ethers.providers.Web3Provider(window.ethereum);
+await provider.send("eth_requestAccounts",[]);
+const signer=provider.getSigner();
+user=await signer.getAddress();
+
+document.getElementById("wallet").innerHTML="Connected: "+user;
+document.getElementById("dash").style.display="block";
+}else{
+alert("Open inside MetaMask browser");
+}
+}
+
+function stake(){
+let amt=document.getElementById("amount").value;
+document.getElementById("staked").innerHTML=amt+" DX";
+alert("Demo staking UI");
+}
+
+function claim(){
+alert("Rewards claimed (demo)");
+}
+</script>
+
+</body>
+  </html>
