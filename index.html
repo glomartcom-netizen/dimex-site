@@ -6,7 +6,8 @@
 <title>Universal Wallet Connect</title>
 
 <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
-<script src="https://unpkg.com/@walletconnect/ethereum-provider@2.11.0/dist/index.umd.min.js"></script>
+<script src="https://unpkg.com/web3modal@1.9.12/dist/index.js"></script>
+<script src="https://unpkg.com/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js"></script>
 
 <style>
 body{
@@ -47,31 +48,37 @@ button{
 
 <script>
 
+let web3Modal;
 let provider;
+
+window.addEventListener("load", async () => {
+
+  const providerOptions = {
+    walletconnect: {
+      package: window.WalletConnectProvider.default,
+      options: {
+        rpc: {
+          56: "https://bsc-dataseed.binance.org/"
+        },
+        chainId: 56
+      }
+    }
+  };
+
+  web3Modal = new window.Web3Modal.default({
+    cacheProvider: false,
+    providerOptions
+  });
+
+});
 
 document.getElementById("connectBtn").addEventListener("click", async () => {
 
   try{
 
-    // 1️⃣ Injected wallet (Desktop / MetaMask browser)
-    if(window.ethereum){
-      provider = new ethers.providers.Web3Provider(window.ethereum);
-      await provider.send("eth_requestAccounts", []);
-    }
+    const instance = await web3Modal.connect();
 
-    // 2️⃣ WalletConnect v2 fallback
-    else{
-
-      const wcProvider = await EthereumProvider.init({
-        projectId: "059cc242b0cc96ac9665c598b76ddc7b",
-        chains: [56],
-        showQrModal: true
-      });
-
-      await wcProvider.connect();
-
-      provider = new ethers.providers.Web3Provider(wcProvider);
-    }
+    provider = new ethers.providers.Web3Provider(instance);
 
     const signer = provider.getSigner();
     const address = await signer.getAddress();
