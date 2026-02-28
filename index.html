@@ -3,9 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Wallet Connect Test</title>
+<title>Universal Wallet Connect</title>
 
 <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
+<script src="https://unpkg.com/@walletconnect/ethereum-provider@2.10.0/dist/index.umd.js"></script>
 
 <style>
 body{
@@ -26,18 +27,20 @@ button{
   border-radius:10px;
   font-weight:bold;
   cursor:pointer;
+  margin:10px;
 }
 
 #wallet{
   margin-top:20px;
   color:gold;
+  text-align:center;
 }
 </style>
 </head>
 
 <body>
 
-<h2>Simple Wallet Connect Test</h2>
+<h2>Universal Wallet Connect</h2>
 
 <button onclick="connectWallet()">Connect Wallet</button>
 
@@ -45,23 +48,34 @@ button{
 
 <script>
 
+let provider;
+
 async function connectWallet(){
 
   try{
 
-    if(!window.ethereum){
-      alert("No wallet detected");
-      return;
+    // 1️⃣ Try injected wallet (Desktop / MetaMask browser)
+    if(window.ethereum){
+      provider = new ethers.providers.Web3Provider(window.ethereum);
+      await provider.send("eth_requestAccounts", []);
     }
 
-    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    // 2️⃣ Otherwise use WalletConnect v2
+    else{
 
-    // request account
-    await provider.send("eth_requestAccounts", []);
+      const wcProvider = await window.EthereumProvider.init({
+        projectId: "059cc242b0cc96ac9665c598b76ddc7b",
+        chains: [56],
+        showQrModal: true
+      });
+
+      await wcProvider.connect();
+
+      provider = new ethers.providers.Web3Provider(wcProvider);
+    }
 
     const signer = provider.getSigner();
     const address = await signer.getAddress();
-
     const network = await provider.getNetwork();
 
     document.getElementById("wallet").innerHTML =
@@ -69,8 +83,8 @@ async function connectWallet(){
       "<br>Chain ID: " + network.chainId;
 
   }catch(e){
-    alert("Error: " + e.message);
     console.log(e);
+    alert("Connection Failed: " + e.message);
   }
 }
 
