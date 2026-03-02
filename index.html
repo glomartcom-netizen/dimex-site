@@ -1,75 +1,117 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Clean Wallet Test</title>
+<title>DimeX Staking Dashboard</title>
+
+<script type="module">
+
+import { createAppKit } from 'https://esm.sh/@reown/appkit'
+import { Ethers5Adapter } from 'https://esm.sh/@reown/appkit-adapter-ethers5'
+import { bsc } from 'https://esm.sh/@reown/appkit/networks'
+import { ethers } from 'https://esm.sh/ethers@5.7.2'
+
+const projectId = 'f9471d926852cbae4eb35a8b39c69bf9'
+
+const metadata = {
+  name: 'DimeX Staking',
+  description: 'DimeX Staking Protocol',
+  url: window.location.origin,
+  icons: ['https://your-website.com/logo.png']
+}
+
+const modal = createAppKit({
+  adapters: [new Ethers5Adapter()],
+  networks: [bsc],
+  metadata,
+  projectId,
+  features: { analytics: true }
+})
+
+window.openConnectModal = () => modal.open()
+
+// ===== CONNECT TO DASHBOARD =====
+
+let provider
+let signer
+let userAddress
+
+modal.subscribe(async (state) => {
+
+  if (!state?.address) return
+
+  const walletProvider = await modal.getProvider()
+
+  provider = new ethers.providers.Web3Provider(walletProvider)
+  signer = provider.getSigner()
+  userAddress = state.address
+
+  // Referral
+  const refInput = document.getElementById("refLink")
+  if (refInput) {
+    refInput.value =
+      window.location.origin + "?ref=" + userAddress
+  }
+
+  // Admin
+  if (typeof ADMIN !== "undefined") {
+    if (userAddress.toLowerCase() === ADMIN.toLowerCase()) {
+      const adminPanel = document.getElementById("adminPanel")
+      if (adminPanel) adminPanel.style.display = "block"
+    }
+  }
+
+  // Load
+  if(typeof loadData === "function"){  
+
+    setTimeout(async () => {  
+
+      await loadData()
+
+      if(typeof loadLivePrice === "function"){  
+        await loadLivePrice()  
+      }
+
+      if(typeof loadRates === "function"){  
+        await loadRates()  
+      }
+
+      setInterval(() => {  
+        if(userAddress){  
+          loadData()  
+          loadLivePrice()  
+        }  
+      }, 30000)
+
+    }, 800)
+
+  }
+
+})
+
+</script>
 
 <style>
-body{
-  background:#000;
-  color:#fff;
-  font-family:Arial;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  flex-direction:column;
-  height:100vh;
-}
-button{
-  padding:15px 30px;
-  background:gold;
-  border:none;
-  border-radius:10px;
-  font-weight:bold;
-  cursor:pointer;
-}
-#wallet{
-  margin-top:20px;
-  color:gold;
+.connect-btn {
+  background-color: #f1b80d;
+  color: black;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 10px;
+  font-weight: bold;
+  cursor: pointer;
 }
 </style>
+
 </head>
 
 <body>
 
-<h2>Clean Wallet Connect Test</h2>
-<button id="connectBtn">Connect Wallet</button>
-<div id="wallet"></div>
 
-<script>
-
-document.getElementById("connectBtn").addEventListener("click", async () => {
-
-  try {
-
-    if (!window.ethereum) {
-      alert("No wallet injected.\nOpen inside MetaMask / Trust Wallet browser.");
-      return;
-    }
-
-    // Request accounts
-    const accounts = await window.ethereum.request({
-      method: "eth_requestAccounts"
-    });
-
-    // Get chain
-    const chainId = await window.ethereum.request({
-      method: "eth_chainId"
-    });
-
-    document.getElementById("wallet").innerHTML =
-      "Connected:<br>" + accounts[0] +
-      "<br>Chain ID: " + parseInt(chainId, 16);
-
-  } catch (err) {
-    alert("Error: " + err.message);
-    console.log(err);
-  }
-
-});
-
-</script>
+<div style="display:flex;justify-content:space-between;padding:20px;">
+  <appkit-button></appkit-button>
+</div>
 
 </body>
 </html>
