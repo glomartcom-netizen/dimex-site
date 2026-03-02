@@ -545,7 +545,6 @@ Mode:
 <script>
 let provider, signer, userAddress;
   
-const ADMIN="0x53ba2d865be750d0e2d4d01bcb0a46ec1684c46b";
 const USDT="0x55d398326f99059fF775485246999027B3197955";
 const DMX="PUT_DMX_TOKEN";
 const STAKING_ADDRESS="PUT_STAKING_CONTRACT";
@@ -1296,12 +1295,16 @@ window.open("https://bscscan.com/address/"+addr,"_blank");
 }
 </script>
   
-<script type="module">  
-  
+<script type="module">
+
 import { createAppKit } from 'https://esm.sh/@reown/appkit'
 import { Ethers5Adapter } from 'https://esm.sh/@reown/appkit-adapter-ethers5'
 import { bsc } from 'https://esm.sh/@reown/appkit/networks'
 import { ethers } from 'https://esm.sh/ethers@5.7.2'
+
+// ================= CONFIG =================
+
+const ADMIN = "0x53ba2d865be750d0e2d4d01bcb0a46ec1684c46b"
 
 const projectId = 'f9471d926852cbae4eb35a8b39c69bf9'
 
@@ -1311,6 +1314,8 @@ const metadata = {
   url: window.location.origin,
   icons: ['https://your-website.com/logo.png']
 }
+
+// ================= INIT APPKIT =================
 
 const modal = createAppKit({
   adapters: [new Ethers5Adapter()],
@@ -1322,65 +1327,77 @@ const modal = createAppKit({
 
 window.openConnectModal = () => modal.open()
 
-// ===== CONNECT TO DASHBOARD =====
+// ================= GLOBALS =================
 
 let provider
 let signer
 let userAddress
 
+// ================= SUBSCRIBE =================
+
 modal.subscribe(async (state) => {
 
   if (!state?.address) return
 
-  const walletProvider = await modal.getProvider()
+  try {
 
-  provider = new ethers.providers.Web3Provider(walletProvider)
-  signer = provider.getSigner()
-  userAddress = state.address
+    const walletProvider = await modal.getProvider()
 
-  // Referral
-  const refInput = document.getElementById("refLink")
-  if (refInput) {
-    refInput.value =
-      window.location.origin + "?ref=" + userAddress
-  }
+    provider = new ethers.providers.Web3Provider(walletProvider)
+    signer = provider.getSigner()
+    userAddress = state.address
 
-  // Admin
-  if (typeof ADMIN !== "undefined") {
+    // Show wallet
+    const walletBox = document.getElementById("walletDisplay")
+    if(walletBox){
+      walletBox.innerHTML = "Connected: " + userAddress
+    }
+
+    // ================= ADMIN CHECK =================
     if (userAddress.toLowerCase() === ADMIN.toLowerCase()) {
       const adminPanel = document.getElementById("adminPanel")
-      if (adminPanel) adminPanel.style.display = "block"
+      if (adminPanel) {
+        adminPanel.style.display = "block"
+      }
     }
-  }
 
-  // Load
-  if(typeof loadData === "function"){  
+    // ================= REFERRAL =================
+    const refInput = document.getElementById("refLink")
+    if (refInput) {
+      refInput.value =
+        window.location.origin + "?ref=" + userAddress
+    }
 
-    setTimeout(async () => {  
+    // ================= LOAD DATA =================
+    if (typeof loadData === "function") {
 
       await loadData()
 
-      if(typeof loadLivePrice === "function"){  
-        await loadLivePrice()  
+      if (typeof loadLivePrice === "function") {
+        await loadLivePrice()
       }
 
-      if(typeof loadRates === "function"){  
-        await loadRates()  
+      if (typeof loadRates === "function") {
+        await loadRates()
       }
 
-      setInterval(() => {  
-        if(userAddress){  
-          loadData()  
-          loadLivePrice()  
-        }  
+      // Auto refresh every 30s
+      setInterval(() => {
+        if (userAddress) {
+          loadData()
+          if (typeof loadLivePrice === "function") {
+            loadLivePrice()
+          }
+        }
       }, 30000)
 
-    }, 800)
+    }
 
+  } catch (err) {
+    console.log("Connection Error:", err)
   }
 
 })
-  
 
 </script>
 
